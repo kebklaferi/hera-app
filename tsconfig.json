@@ -1,0 +1,29 @@
+{
+  "extends": "expo/tsconfig.base", // Uses Expo's recommended TypeScript config as a base
+  "compilerOptions": {
+    "strict": true, // Enables strict type checking
+    "target": "esnext", // Supports the latest ES features
+    "module": "esnext", // Supports modern JavaScript module system
+    "allowSyntheticDefaultImports": true, // Easier imports without needing `.default`
+    "esModuleInterop": true, // Improves compatibility with common JS modules
+    "skipLibCheck": true, // Skip checking library declarations for better performance
+    "forceConsistentCasingInFileNames": true, // Ensures consistent file name casing across platforms
+    "baseUrl": ".", // Base path for module resolution
+    "paths": {
+      "@/*": ["./*"] // Use aliases to simplify imports
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules", // Excludes node_modules from compilation
+    "babel.config.js",
+    "metro.config.js",
+    "jest.config.js"
+  ]
+}
