@@ -74,7 +74,7 @@ She symbolizes dignity, protection, and divine ownership — just like this app.
 To run locally:
 
 ```bash
-git clone https://github.com/yourusername/hera.git
+git clone https://github.com/kebklaferi/hera-app.git
 cd hera
 npm install
 npx expo start
