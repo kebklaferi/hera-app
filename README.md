@@ -1,50 +1,80 @@
-# Welcome to your Expo app 👋
+# Hera
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+![Build Status](https://img.shields.io/badge/build-wip-lightgrey?style=for-the-badge)
+![License](https://img.shields.io/badge/license-Custom-lightblue?style=for-the-badge)
+![Built with Expo](https://img.shields.io/badge/built%20with-Expo-blue?style=for-the-badge)
+![React Native](https://img.shields.io/badge/react%20native-%5E0.74-green?style=for-the-badge)
 
-## Get started
+**A secure, private, and elegant period tracking app — yours and yours only.**  
+No servers. No accounts. No subscriptions. Just you and your cycle.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## What is Hera?
 
-2. Start the app
+**Hera** is a privacy-first period tracker inspired by lunar cycles and Greek mythology.  
+It’s built entirely around your safety, security, and sovereignty.
 
-   ```bash
-    npx expo start
-   ```
+- **No 3rd-party servers**
+- **No accounts or cloud sync**
+- **No ads, tracking, or analytics**
+- **No subscriptions**
+- **No corporate surveillance**
 
-In the output, you'll find options to open the app in a
+In a time when your most intimate data can be sold, hacked, or even subpoenaed, Hera offers a radical alternative:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+> _“It’s yours and yours only.”_
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## Why not other apps?
 
-When you're ready, run:
+Many popular cycle trackers **claim** to protect your privacy —  
+but quietly sell your data to advertisers, governments, or worse.
+
+Some users now create **multiple accounts** to hide their data from authorities.  
+Some apps **obfuscate** what they collect — but they **still collect**.
+
+We believe this is wrong. You shouldn’t have to hide from your own tools.
+
+---
+
+## Why Hera Exists
+
+- Because **privacy** isn’t optional.
+- Because you shouldn’t need to trust — only verify.
+- Because **reproductive health** should not be monetized.
+- Because **safety** means **total control** — not fake toggles.
+
+---
+
+## Development Status
+
+> **Hera is currently in active development.**  
+Core features are being built.
+
+
+## Philosophy
+
+> **No security through obscurity. No clutter. No compromises.**
+
+- Hera does not *look* secure — it **is** secure.
+- No hidden exports. No false privacy settings. No opt-ins.  
+- If it’s not **on your device**, it doesn’t exist.
+
+Privacy isn't a feature. It’s a **foundation**.
+
+Hera is the Greek goddess of women, fertility, sovereignty, and life itself.
+She symbolizes dignity, protection, and divine ownership — just like this app.
+
+---
+
+## Installation
+
+To run locally:
 
 ```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+git clone https://github.com/kebklaferi/hera-app.git
+cd hera
+npm install
+npx expo start
