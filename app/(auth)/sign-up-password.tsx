@@ -1,40 +1,32 @@
 import {Alert, Image, SafeAreaView, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import {InputField} from "@/components/InputField";
 import Images from "@/constants/images";
-import {useEffect, useState} from "react";
-import {useRouter} from "expo-router";
+import {useState} from "react";
+import {useLocalSearchParams, useRouter} from "expo-router";
 import {useSQLiteContext} from "expo-sqlite";
-import {SignUpFormInitialState} from "@/util/initialStates";
-import {ISignUpForm} from "@/util/interfaces";
-import {BiometricSetUp} from "@/components/BiometricSetUp";
-import * as LocalAuthentication from "expo-local-authentication";
 import {createUser} from "@/db/user-service";
-const SignUp = () => {
-    const [form, setForm] = useState<ISignUpForm>(SignUpFormInitialState);
-    const [isTouchIdAvailable, setIsTouchIdAvailable] = useState<boolean>(false);
+import {useUser} from "@/context/UserContext";
+const SignUpPassword = () => {
+    const { biometricSetUp } = useLocalSearchParams();
+    const [password, setPassword] = useState<string>("");
     const database = useSQLiteContext();
+    const {setUser} = useUser();
     const router = useRouter();
-
-    useEffect(() => {
-        const checkBiometricAvailability = async () => {
-            const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
-            setIsTouchIdAvailable(supportedTypes.includes(LocalAuthentication.AuthenticationType.FINGERPRINT));
-        };
-        checkBiometricAvailability();
-    }, [])
-    const validateForm = (): boolean => {
-        return form.password !== "" && form.password.length > 6 && (!isTouchIdAvailable || form.biometricSetUp);
-    }
+    const validateForm = (): boolean => password.length > 6;
     const submit = async () => {
         if (!validateForm()) {
             Alert.alert("Incomplete Form", "Please complete all required fields.");
             return;
         }
         try{
+            const form = {
+                password,
+                biometricSetUp: biometricSetUp === "true",
+            };
             const result = await createUser(database, form);
             if (result) {
-                console.log(result);
-                router.push("/set-up")
+                setUser(result);
+                router.push("/(auth)/sign-up-done");
             } else{
                 console.log("Error - something went wrong with user creation.")
             }
@@ -62,21 +54,11 @@ const SignUp = () => {
                 <View className="my-10">
                     <InputField
                         title="Password"
-                        value={form.password}
+                        value={password}
                         styling="my-4"
-                        handleChangeText={(e) => setForm({...form, password: e})}
+                        handleChangeText={(e) => setPassword(e)}
                     />
                 </View>
-                {isTouchIdAvailable ?
-                    <View>
-                        <BiometricSetUp onSetupComplete={() => setForm({...form, biometricSetUp: true})}/>
-                    </View> :
-                    <View className="items-center">
-                        <Text className="text-base font-semibold py-2">
-                            Biometric authentication is not supported on this device.
-                        </Text>
-                    </View>
-                }
                 <View className="bg-red-50 flex-1 my-7 items-center">
                     <TouchableOpacity
                         className={`bg-burnt-sienna py-2 px-8 rounded-2xl ${!validateForm() && "opacity-50"}`}
@@ -91,4 +73,4 @@ const SignUp = () => {
     );
 }
 
-export default SignUp;
+export default SignUpPassword;

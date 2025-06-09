@@ -1,7 +1,7 @@
 import {Text, TextInput, TouchableOpacity, View} from "react-native";
 import {useState} from "react";
 import {InputFieldProps} from "@/util/interfaces";
-
+import Ionicons from '@expo/vector-icons/Ionicons';
 export const InputField = ({title, value, placeholder, handleChangeText, styling, ...props}: InputFieldProps) => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
     return(
@@ -21,7 +21,11 @@ export const InputField = ({title, value, placeholder, handleChangeText, styling
               {
                   title === 'Password' && (
                       <TouchableOpacity  onPress={() => setShowPassword(!showPassword)}>
-                          <Text>show</Text>
+                          {showPassword ?
+                              <Ionicons name="eye-outline" size={24} color="black" />
+                          :
+                              <Ionicons name="eye-off-outline" size={24} color="black" />
+                          }
                       </TouchableOpacity>
                   )
               }

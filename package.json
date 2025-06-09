@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start --tunnel",
+    "start-clear": "expo start -c --tunnel",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -16,6 +17,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
+    "@react-native-community/datetimepicker": "8.2.0",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "@types/react-native": "^0.72.8",
@@ -39,6 +41,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-native": "0.76.5",
+    "react-native-calendars": "^1.1312.1",
     "react-native-crypto-js": "^1.0.0",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-reanimated": "~3.16.1",

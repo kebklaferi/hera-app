@@ -1,21 +1,44 @@
 import "../global.css";
-import {Stack} from "expo-router";
+import {Slot} from "expo-router";
+import {useEffect} from "react";
+import * as SplashScreen from "expo-splash-screen";
 import {SQLiteProvider} from "expo-sqlite";
 import {initializeDatabase} from "@/db/db-init";
 import {UserProvider} from "@/context/UserContext";
+import {CycleProvider} from "@/context/CycleContext";
+import {Asset} from "expo-asset";
+import images from "@/constants/images";
+
+SplashScreen.preventAutoHideAsync();
+
+const RootNavigation = () => {
+
+    useEffect(() => {
+        const prepare = async () => {
+            const imageModules = Object.values(images);
+            await Asset.loadAsync(imageModules);
+            await SplashScreen.hideAsync();
+        };
+
+        prepare();
+    }, []);
+
+    return (
+        <Slot />
+    )
+};
+
+
 const RootLayout = () => {
     return (
         <SQLiteProvider databaseName="hera.db" onInit={initializeDatabase}>
             <UserProvider>
-                <Stack>
-                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                    <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                    <Stack.Screen name="(setup)" options={{ headerShown: false }} />
-                    <Stack.Screen name="index" options={{ headerShown: false }} />
-                </Stack>
+                <CycleProvider>
+                   <RootNavigation />
+                </CycleProvider>
             </UserProvider>
         </SQLiteProvider>
     );
-}
-export default RootLayout
+};
 
+export default RootLayout;

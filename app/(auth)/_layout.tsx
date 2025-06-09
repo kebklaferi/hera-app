@@ -11,7 +11,19 @@ const AuthLayout = () => {
                 }}
             />
             <Stack.Screen
-                name={"sign-up"}
+                name={"sign-up-password"}
+                options={{
+                    headerShown: false
+                }}
+            />
+            <Stack.Screen
+                name={"sign-up-biometrics"}
+                options={{
+                    headerShown: false
+                }}
+            />
+            <Stack.Screen
+                name={"sign-up-done"}
                 options={{
                     headerShown: false
                 }}

@@ -7,9 +7,12 @@
     "icon": "",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#F47251"
+    },
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
     },
     "android": {
       "adaptiveIcon": {

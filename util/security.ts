@@ -23,8 +23,16 @@ export const encryptString = (data: string): string => {
     return CryptoJS.AES.encrypt(data, SECRET_KEY).toString();
 }
 
-export const decryptString = (data: string | undefined): string | undefined => {
-    if(!data) return undefined;
+export const decryptString = (data: string): string => {
     const bytes = CryptoJS.AES.decrypt(data, SECRET_KEY);
     return bytes.toString(CryptoJS.enc.Utf8);
 }
+
+export const encryptNumber = (num: number): string => {
+    return encryptString(num.toString());
+};
+
+export const decryptNumber = (data: string): number => {
+    const decrypted = decryptString(data);
+    return parseInt(decrypted, 10);
+};

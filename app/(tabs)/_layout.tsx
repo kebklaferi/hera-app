@@ -42,10 +42,11 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
-                name="calendar"
+                name="period-calendar"
                 options={{
-                    title: 'Calendar',
+                    title: 'PeriodCalendar',
                     headerShown: false,
+                    lazy: false,
                     tabBarIcon: ({focused}) => (
                         <TabIcon iconName="calendar" focused={focused}/>
                     ),

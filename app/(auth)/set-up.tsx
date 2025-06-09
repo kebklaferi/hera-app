@@ -3,6 +3,8 @@ import {Link, useRouter} from "expo-router";
 
 const SetUp = () => {
     const router = useRouter();
+    //TODO IZBRIŠI TA PAGE IN GA DAJ V SET UP DIRECTORY
+    //TODO TAM DODAJ MOZNOST NASTAVITVE DEFAULT CYCLA IN PERIOD LENGHTA
     return(
         <View className="bg-red-50 flex-1 my-7 items-center">
             <Text>should push to setup page</Text>

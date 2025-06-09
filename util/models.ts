@@ -1,14 +1,14 @@
 import {LogData} from "@/util/interfaces";
 
 export interface User {
-    id?: string;
-    username?: string;
-    biometric_key?: boolean;
-    password?: string; //needs to be hashed
-    created_at?: string;
-    updated_at?: string;
-    default_period_length?: number;
-    default_cycle_length?: number;
+    id: string;
+    biometric_key: boolean;
+    password: string;
+    created_at: string;
+    updated_at: string;
+    default_period_length: number;
+    default_cycle_length: number;
+    notes_enabled: boolean;
 }
 
 export interface Cycle {
@@ -20,6 +20,20 @@ export interface Cycle {
     ovulation_end_date: Date,
     cycle_length: number,
     period_length: number,
+    created_at: string,
+    updated_at: string,
+    user_id: string
+
+}
+export interface CycleModel {
+    id: string,
+    cycle_start_date: string,
+    cycle_end_date: string,
+    period_end_date: string,
+    follicular_end_date: string,
+    ovulation_end_date: string,
+    cycle_length: string,
+    period_length: string,
     created_at: string,
     updated_at: string,
     user_id: string
