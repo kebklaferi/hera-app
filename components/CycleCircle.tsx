@@ -1,5 +1,5 @@
-import React from 'react';
-import {View, Image, StyleSheet, Text, FlatList} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, Image, StyleSheet, Text, FlatList, ImageSourcePropType, StyleProp, ImageStyle} from 'react-native';
 import Svg, {Circle} from 'react-native-svg';
 import {fromDateString, getSurroundingDays, refactorDateToDate, toDateString} from "@/util/dateHelpers";
 import {useCycle} from "@/context/CycleContext";
@@ -19,6 +19,9 @@ const CENTER = SVG_SIZE / 2;
 const CycleCircle = () => {
     const {currentCycle} = useCycle();
     const today = refactorDateToDate(new Date());
+    const [imgSrc, setImgSrc] = useState<ImageSourcePropType | null>(null);
+    const [imageStyle, setImageStyle] = useState<StyleProp<ImageStyle>>({});
+
 
     if (!currentCycle) {
         return (
@@ -27,12 +30,16 @@ const CycleCircle = () => {
             </View>
         );
     }
+    useEffect(() => {
+        const {imgSrc, imageStyle} = getPictureAndStyleByPhase(
+            getPhaseByDayIndex(currentCycle, getCycleDay(today, currentCycle.cycle_start_date))
+        );
+        setImageStyle(imageStyle);
+        setImgSrc(imgSrc);
+    }, [currentCycle])
 
 
     const visibleDots = getVisibleCycleDots(currentCycle);
-    const {imgSrc, imageStyle} = getPictureAndStyleByPhase(
-        getPhaseByDayIndex(currentCycle, getCycleDay(today, currentCycle.cycle_start_date))
-    );
     const days = getSurroundingDays();
     const todayIndexInDots = visibleDots.findIndex(
         (dot) =>
@@ -55,7 +62,7 @@ const CycleCircle = () => {
         const isToday = i === todayIndexInDots;
         return (
             <Circle
-                key={dot.day}
+                key={toDateString(dot.date)}
                 cx={x}
                 cy={y}
                 r={DOT_RADIUS}
@@ -94,10 +101,12 @@ const CycleCircle = () => {
                     {dots}
                 </Svg>
                 <View style={styles.circleContainer}>
-                    <Image
-                        source={imgSrc}
-                        style={imageStyle}
-                    />
+                    {imgSrc && imageStyle ? (
+                        <Image
+                            source={imgSrc}
+                            style={imageStyle}
+                        />
+                    ) : null}
                 </View>
             </View>
             </>
