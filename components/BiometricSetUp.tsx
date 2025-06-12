@@ -1,6 +1,7 @@
 import {BiometricSetUpProps} from "@/util/interfaces";
-import {Alert, TouchableOpacity, View, Text} from "react-native";
+import {Alert, TouchableOpacity, View, Text, StyleSheet} from "react-native";
 import * as LocalAuthentication from "expo-local-authentication";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export const BiometricSetUp = ({ onSetupComplete }: BiometricSetUpProps) => {
     const setupBiometricAuth = async () => {
@@ -17,13 +18,30 @@ export const BiometricSetUp = ({ onSetupComplete }: BiometricSetUpProps) => {
     };
 
     return (
-        <View className="items-center my-4">
-            <TouchableOpacity
-                onPress={setupBiometricAuth}
-                className="bg-burnt-sienna py-2 px-8 rounded-2xl"
-            >
-                <Text className="text-white text-lg">Set Up Biometric Auth</Text>
-            </TouchableOpacity>
+        <View style={styles.fingerprintContainer}>
+            <View style={styles.fingerprintCircle}>
+                <TouchableOpacity
+                    onPress={setupBiometricAuth}
+                >
+                    <Ionicons name="finger-print" size={80} color="black" />
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
+
+const styles = StyleSheet.create({
+    fingerprintContainer: {
+        position: "relative",
+        marginBottom: 160,
+        marginTop: 90,
+    },
+    fingerprintCircle: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: "#f2f2f2",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+});

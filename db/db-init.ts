@@ -10,6 +10,10 @@ export async function initializeDatabase(db: SQLiteDatabase) {
     console.log("Initialization - creating database if needed.");
     await db.execAsync(`
 
+        DROP TABLE IF EXISTS User;
+        DROP TABLE IF EXISTS Cycle;
+        drop table if EXISTS Daily_log;
+
         CREATE TABLE IF NOT EXISTS User (
             id TEXT PRIMARY KEY,
             biometric_key INTEGER NOT NULL,
@@ -24,6 +28,7 @@ export async function initializeDatabase(db: SQLiteDatabase) {
         CREATE TABLE IF NOT EXISTS Cycle (
             id TEXT PRIMARY KEY,
             cycle_start_date TEXT NOT NULL,
+            cycle_start_date_plain TEXT NOT NULL ,
             cycle_end_date TEXT NOT NULL,
             period_end_date TEXT NOT NULL,
             follicular_end_date TEXT NOT NULL,

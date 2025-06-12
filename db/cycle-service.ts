@@ -1,114 +1,174 @@
 import {SQLiteDatabase} from "expo-sqlite";
 import {CycleContextData, UserContextData} from "@/util/interfaces";
-import {decryptNumber, decryptString, encryptNumber, encryptString, generateUUID} from "@/util/security";
-import {addDays, differenceInDays, subDays} from "date-fns";
+import {
+    decryptFromStringToDate,
+    decryptNumber,
+} from "@/util/security";
+import {addDays, differenceInDays} from "date-fns";
 import {CycleModel} from "@/util/models";
-import {fromDateString, toDateString} from "@/util/dateHelpers";
+import {fromDateString, refactorDateToDate} from "@/util/dateHelpers";
+import {generateCycleData} from "@/util/cycles-utils";
 
-export const createUserCycle = async (db: SQLiteDatabase, user: UserContextData, period_start_date: Date): Promise<CycleContextData | null> => {
+export const initUserCycle = async (db: SQLiteDatabase, user: UserContextData, period_start_date: Date): Promise<CycleContextData | null> => {
     try {
-        if (!user.default_cycle_length || !user.default_period_length) return;
-        const cycleId = generateUUID();
+        const currentDate = refactorDateToDate(new Date());
+        const periodStartDate = refactorDateToDate(period_start_date);
 
-        // need to remove time from dates
-        // calculate theoretical end date based on default cycle length
-        // if the current date is past the expected end, use today as fallback
-        // const cycleEndDate = today > expectedCycleEndDate ? today : expectedCycleEndDate;
-        // cycle phases logic
-        // cycle_end_date == luteal_end_date
-        // ovulation 2 weeks before next period; fertile window ovulation_day + 1 && -5
-        // fertile window start date - 1; 6 days long fertile window
-        const normalized_period_start_date = toDateString(period_start_date);
-        const expectedCycleEndDate = toDateString(addDays(normalized_period_start_date, user.default_cycle_length - 1));
-        const cycleEndDate = expectedCycleEndDate;
-        const actualCycleLength = differenceInDays(cycleEndDate, normalized_period_start_date) + 1;
-        const periodEndDate = toDateString(addDays(normalized_period_start_date, user.default_period_length - 1));
-        const ovulationEndDate = toDateString(subDays(cycleEndDate, 13));
-        const follicularEndDate = toDateString(subDays(ovulationEndDate, 7));
+        if (periodStartDate > currentDate) return null;
+        if (!user.default_cycle_length) return null;
 
-        // encrypted version to save to database
-        const encryptedStart = encryptString(normalized_period_start_date);
-        const encryptedCycleEnd = encryptString(cycleEndDate);
-        const encryptedPeriodEnd = encryptString(periodEndDate);
-        const encryptedFollicularEnd = encryptString(follicularEndDate);
-        const encryptedOvulationEnd = encryptString(ovulationEndDate);
-        const encryptedCycleLength = encryptNumber(actualCycleLength);
-        const encryptedPeriodLength = encryptNumber(user.default_period_length);
+        // cycles can be inconsistent; can be longer than default_cycle_length
+        const expectedCycleEndDate = addDays(periodStartDate, user.default_cycle_length - 1);
+        const cycleEndDate = expectedCycleEndDate < currentDate ? currentDate : expectedCycleEndDate;
 
-        const now = new Date().toISOString();
+        // + 1; first day also included in length
+        const actualCycleLength = differenceInDays(cycleEndDate, periodStartDate) + 1;
 
-        const result = await db.runAsync(
-            `INSERT INTO Cycle (id,
-                                cycle_start_date,
-                                cycle_end_date,
-                                period_end_date,
-                                follicular_end_date,
-                                ovulation_end_date,
-                                cycle_length,
-                                period_length,
-                                created_at,
-                                user_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-                cycleId,
-                encryptedStart,
-                encryptedCycleEnd,
-                encryptedPeriodEnd,
-                encryptedFollicularEnd,
-                encryptedOvulationEnd,
-                encryptedCycleLength,
-                encryptedPeriodLength,
-                now,
-                user.id,
-            ]
+        const cycleData = generateCycleData(cycleEndDate, periodStartDate, user, actualCycleLength);
+
+        if (!cycleData || !cycleData.dbCycleValues || !cycleData.contextCycle) return null;
+
+        const result = await db.runAsync(`
+                    INSERT INTO Cycle (id,
+                                       cycle_start_date,
+                                       cycle_start_date_plain,
+                                       cycle_end_date,
+                                       period_end_date,
+                                       follicular_end_date,
+                                       ovulation_end_date,
+                                       cycle_length,
+                                       period_length,
+                                       created_at,
+                                       user_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            cycleData.dbCycleValues
         );
         if (result.changes > 0) {
-            console.log("Cycle inserted successfully!");
-            console.log("Inserted Cycle ID:", cycleId);
-            return {
-                id: cycleId,
-                cycle_start_date: normalized_period_start_date,
-                cycle_end_date: cycleEndDate,
-                period_end_date: periodEndDate,
-                follicular_end_date: follicularEndDate,
-                ovulation_end_date: ovulationEndDate,
-                cycle_length: actualCycleLength,
-                period_length: user.default_period_length,
-                created_at: now,
-                updated_at: now,
-                user_id: user.id,
-            } as CycleContextData;
-        } else {
-            console.warn("No cycle was inserted.");
-        }
-    } catch (err) {
-        console.error("Failed to create user cycle:", err);
-        throw err;
+            return cycleData.contextCycle;
+        } else return null;
+
+    } catch (error) {
+        console.warn(error);
+        return null;
     }
 }
+export const createUserCycle = async (db: SQLiteDatabase, user: UserContextData, period_start_date: Date): Promise<CycleContextData | null> => {
+    try {
+        const currentDate = refactorDateToDate(new Date());
+        if (period_start_date > currentDate) return null;
+        if (!user.default_period_length || !user.default_cycle_length) return null;
 
-//todo also doesnt work as cycle.start_date is encrypted
-// need to add cycle_start_date plain_column so i can query
-export const fetchLatestCycle = async (db: SQLiteDatabase, userId: string): Promise<CycleContextData> => {
-    const [latestCycle] = await db.getAllAsync(
-        `SELECT *
-     FROM Cycle
-     WHERE user_id = ?
-     ORDER BY cycle_start_date DESC LIMIT 1`,
-        [userId]
-    ) as CycleModel;
+        const periodStartDate = refactorDateToDate(period_start_date);
+        const cycleEndDate = addDays(periodStartDate, user.default_cycle_length - 1);
 
-    return {
-        id: latestCycle.id,
-        cycle_start_date: fromDateString(decryptString(latestCycle.cycle_start_date)),
-        cycle_end_date: fromDateString(decryptString(latestCycle.cycle_end_date)),
-        period_end_date: fromDateString(decryptString(latestCycle.period_end_date)),
-        follicular_end_date: fromDateString(decryptString(latestCycle.follicular_end_date)),
-        ovulation_end_date: fromDateString(decryptString(latestCycle.ovulation_end_date)),
-        cycle_length: decryptNumber(latestCycle.cycle_length),
-        period_length: decryptNumber(latestCycle.period_length),
-        created_at: latestCycle.created_at,
-        updated_at: latestCycle.updated_at,
-        user_id: latestCycle.user_id,
-    };
+        const cycleData = generateCycleData(cycleEndDate, periodStartDate, user, user.default_cycle_length);
+
+        if (!cycleData || !cycleData.dbCycleValues || !cycleData.contextCycle) return null;
+
+        console.log('here')
+        const result = await db.runAsync(`
+                    INSERT INTO Cycle (id,
+                                       cycle_start_date,
+                                       cycle_start_date_plain,
+                                       cycle_end_date,
+                                       period_end_date,
+                                       follicular_end_date,
+                                       ovulation_end_date,
+                                       cycle_length,
+                                       period_length,
+                                       created_at,
+                                       user_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            cycleData.dbCycleValues
+        );
+        if (result.changes > 0) {
+            return cycleData.contextCycle;
+        } else return null;
+
+    } catch (error) {
+        console.warn(error);
+        return null;
+    }
+}
+export const fetchLatestCycles = async (db: SQLiteDatabase): Promise<CycleContextData[]> => {
+    try {
+        const rows = await db.getAllAsync<CycleModel>(
+            `SELECT *
+             FROM Cycle
+             ORDER BY cycle_start_date_plain 
+             DESC LIMIT 6`
+        );
+        const cycles: CycleContextData[] = rows.map(row => ({
+            id: row.id,
+            cycle_start_date: decryptFromStringToDate(row.cycle_start_date),
+            cycle_end_date: decryptFromStringToDate(row.cycle_end_date),
+            period_end_date: decryptFromStringToDate(row.period_end_date),
+            follicular_end_date: decryptFromStringToDate(row.follicular_end_date),
+            ovulation_end_date: decryptFromStringToDate(row.ovulation_end_date),
+            cycle_length: decryptNumber(row.cycle_length),
+            period_length: decryptNumber(row.period_length),
+        }));
+
+        return cycles;
+    } catch (error) {
+        console.error("Failed to fetch latest cycles:", error);
+        return [];
+    }
 };
+
+export const updatePeriodEndDate = async (db: SQLiteDatabase, user: UserContextData, currentCycle: CycleContextData, cycleId: string, newPeriodEndDate: Date): Promise<CycleContextData| null>  => {
+    try {
+        const periodEndDate = refactorDateToDate(newPeriodEndDate);
+        const periodStartDate = currentCycle.cycle_start_date;
+
+        const prevCycleLength = currentCycle.cycle_length;
+        const newPeriodLength = differenceInDays(periodEndDate, periodStartDate) + 1;
+
+        const addToCycle = newPeriodLength > prevCycleLength  ? (newPeriodLength - prevCycleLength) : 0;
+
+        const updatedCycleLength = prevCycleLength + addToCycle;
+        const updatedCycleEndDate = addDays(periodStartDate, updatedCycleLength - 1);
+
+        const updatedCycleData = generateCycleData(
+            updatedCycleEndDate,
+            periodStartDate,
+            user,
+            updatedCycleLength
+        );
+
+        if (!updatedCycleData?.dbCycleValues) {
+            console.warn("Failed to generate updated cycle data.");
+            return null;
+        }
+        const valuesWithoutId = updatedCycleData.dbCycleValues.slice(1); // skip the first (id)
+        const finalUpdateValues = [...valuesWithoutId, updatedCycleData.dbCycleValues[0]];
+        console.log(finalUpdateValues)
+        const result = await db.runAsync(
+            `
+      UPDATE Cycle SET
+        cycle_start_date = ?,
+        cycle_start_date_plain = ?,
+        cycle_end_date = ?,
+        period_end_date = ?,
+        follicular_end_date = ?,
+        ovulation_end_date = ?,
+        cycle_length = ?,
+        period_length = ?,
+        created_at = ?,
+        user_id = ?
+      WHERE id = ?
+      `,
+            finalUpdateValues
+        );
+
+        if (result.changes > 0) {
+            return updatedCycleData.contextCycle;
+        } else {
+            console.warn("No cycle updated");
+            return null;
+        }
+    } catch (error) {
+        console.error("Failed to update cycle:", error);
+        return null;
+    }
+}

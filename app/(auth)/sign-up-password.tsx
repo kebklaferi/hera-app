@@ -1,13 +1,13 @@
-import {Alert, Image, SafeAreaView, ScrollView, Text, TouchableOpacity, View} from "react-native";
+import {Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {InputField} from "@/components/InputField";
-import Images from "@/constants/images";
 import {useState} from "react";
 import {useLocalSearchParams, useRouter} from "expo-router";
 import {useSQLiteContext} from "expo-sqlite";
 import {createUser} from "@/db/user-service";
 import {useUser} from "@/context/UserContext";
+
 const SignUpPassword = () => {
-    const { biometricSetUp } = useLocalSearchParams();
+    const {biometricSetUp} = useLocalSearchParams();
     const [password, setPassword] = useState<string>("");
     const database = useSQLiteContext();
     const {setUser} = useUser();
@@ -18,7 +18,7 @@ const SignUpPassword = () => {
             Alert.alert("Incomplete Form", "Please complete all required fields.");
             return;
         }
-        try{
+        try {
             const form = {
                 password,
                 biometricSetUp: biometricSetUp === "true",
@@ -27,7 +27,7 @@ const SignUpPassword = () => {
             if (result) {
                 setUser(result);
                 router.push("/(auth)/sign-up-done");
-            } else{
+            } else {
                 console.log("Error - something went wrong with user creation.")
             }
 
@@ -36,41 +36,60 @@ const SignUpPassword = () => {
         }
     }
     return (
-        <SafeAreaView className="bg-white flex-1">
-            <ScrollView>
-                <View className="items-center">
-                    <Text className="text-4xl my-10 uppercase">
-                        sign up
-                    </Text>
-                    <Image
-                        source={Images.persephoneBg}
-                        style={{
-                            width: 300,
-                            height: 300
-                        }}
-                        resizeMode="contain"
-                    />
-                </View>
-                <View className="my-10">
-                    <InputField
-                        title="Password"
-                        value={password}
-                        styling="my-4"
-                        handleChangeText={(e) => setPassword(e)}
-                    />
-                </View>
-                <View className="bg-red-50 flex-1 my-7 items-center">
-                    <TouchableOpacity
-                        className={`bg-burnt-sienna py-2 px-8 rounded-2xl ${!validateForm() && "opacity-50"}`}
-                        activeOpacity={0.7}
-                        onPress={submit}
-                    >
-                        <Text className="text-white text-xl">Done</Text>
-                    </TouchableOpacity>
-                </View>
-            </ScrollView>
+        <SafeAreaView style={styles.container}>
+            <Text style={styles.title}>Enter your password</Text>
+            <InputField
+                title="Password"
+                value={password}
+                styling="my-20"
+                handleChangeText={(e) => setPassword(e)}
+            />
+
+            <View className="my-7 items-center">
+                <TouchableOpacity
+                    className={`bg-burnt-sienna py-2 px-8 rounded-2xl ${!validateForm() && "opacity-50"}`}
+                    activeOpacity={0.7}
+                    onPress={submit}
+                >
+                    <Text className="text-white text-xl">Done</Text>
+                </TouchableOpacity>
+            </View>
         </SafeAreaView>
     );
 }
 
 export default SignUpPassword;
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: "center",
+        backgroundColor: "#fff",
+    },
+    title: {
+        fontSize: 22,
+        fontWeight: "600",
+        marginBottom: 16,
+        textAlign: "center",
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 10,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        fontSize: 16,
+        marginBottom: 20,
+    },
+    button: {
+        backgroundColor: "#2ecc71",
+        paddingVertical: 14,
+        borderRadius: 10,
+        alignItems: "center",
+    },
+    buttonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "600",
+    },
+});

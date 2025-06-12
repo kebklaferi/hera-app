@@ -1,8 +1,8 @@
 import {ImageSourcePropType, ImageStyle, StyleSheet, StyleProp} from "react-native";
 import Images from "@/constants/images";
 import {CycleContextData} from "@/util/interfaces";
-import {addDays} from "date-fns";
-import {fromDateString, toDateString} from "@/util/dateHelpers";
+import {addDays, isEqual, subDays} from "date-fns";
+import {fromDateString, refactorDateToDate, toDateString} from "@/util/dateHelpers";
 
 export function getCycleDay(today: Date, startDate: Date): number {
     return Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -58,18 +58,19 @@ export const getPictureAndStyleByPhase = (phase: string): {imgSrc: ImageSourcePr
                 imageStyle: styles.centerImageAthena
             }
     }
+    return {
+        imgSrc: Images.athena,
+        imageStyle: styles.centerImageAthena
+    };
 }
-export function getCycleDots(
-    cycle: CycleContextData,
-    daysToShow = 29
-): { day: number; date: Date; phase: string }[] {
+export function getCycleDots(cycle: CycleContextData, daysToShow = 29): { day: number; date: Date; phase: string }[] {
     const dots: { day: number; date: Date; phase: string }[] = [];
     const start = cycle.cycle_start_date;
-    const today = fromDateString(toDateString(new Date()));
+    const today = refactorDateToDate(new Date());
     const currentDayIndex = getCycleDay(today, start);
 
-    const follicularEndDay = getCycleDay(cycle.follicular_end_date, start);
-    const ovulationEndDay = getCycleDay(cycle.ovulation_end_date, start);
+    const ovulationDate = subDays(cycle.ovulation_end_date, 1);
+    const fertileStartDate = subDays(ovulationDate, 5);
 
     for (let i = 0; i < daysToShow; i++) {
         const dayOffset = currentDayIndex + i;
@@ -77,25 +78,33 @@ export function getCycleDots(
         let phase: string;
 
         if (date <= cycle.period_end_date) {
-            phase = 'menstrual';
-        } else if (date <= cycle.follicular_end_date) {
-            phase = 'follicular';
-        } else if (date <= cycle.ovulation_end_date) {
-            phase = 'ovulation';
+            phase = "menstrual";
+        } else if (date < fertileStartDate) {
+            phase = "follicular";
+        } else if (date >= fertileStartDate && date < ovulationDate) {
+            phase = "fertile";
+        } else if (isEqual(date, ovulationDate) || isEqual(date, cycle.ovulation_end_date)) {
+            phase = "ovulation";
         } else if (date <= cycle.cycle_end_date) {
-            phase = 'luteal';
+            phase = "luteal";
         } else {
-            // Prediction: loop back through known structure
-            const predictedDay = dayOffset % cycle.cycle_length;
 
-            if (predictedDay < cycle.period_length) {
-                phase = 'menstrual';
-            } else if (predictedDay < follicularEndDay) {
-                phase = 'follicular';
-            } else if (predictedDay < ovulationEndDay) {
-                phase = 'ovulation';
+            // Prediction logic: wrap through synthetic pattern
+            const predictedDate = addDays(start, dayOffset % cycle.cycle_length);
+
+            if (predictedDate <= cycle.period_end_date) {
+                phase = "menstrual";
+            } else if (predictedDate < fertileStartDate) {
+                phase = "follicular";
+            } else if (predictedDate >= fertileStartDate && predictedDate < ovulationDate) {
+                phase = "fertile";
+            } else if (
+                isEqual(predictedDate, ovulationDate) ||
+                isEqual(predictedDate, cycle.ovulation_end_date)
+            ) {
+                phase = "ovulation";
             } else {
-                phase = 'luteal';
+                phase = "luteal";
             }
         }
 
@@ -106,7 +115,7 @@ export function getCycleDots(
 }
 
 export function getVisibleCycleDots(cycle: CycleContextData, maxDays = 29) {
-    const today = fromDateString(toDateString(new Date()));
+    const today = refactorDateToDate(new Date());
     const start = cycle.cycle_start_date;
     const cycleLength = cycle.cycle_length;
 
@@ -135,9 +144,10 @@ export function getVisibleCycleDots(cycle: CycleContextData, maxDays = 29) {
 
     // 3. Predictions into next cycle
     for (let i = 0; i < predictionDays; i++) {
-        const date = addDays(start, cycleLength + i);
-        const phase = getPhaseByDayIndex(cycle, i);
-        dots.push({ day: cycleLength + i + 1, date, phase, predicted: true });
+        const predictedIndex = cycleLength + i;
+        const date = addDays(start, predictedIndex);
+        const phase = getPhaseByDayIndex(cycle, predictedIndex);
+        dots.push({ day: predictedIndex + 1, date, phase, predicted: true });
     }
 
     return dots;
@@ -147,25 +157,37 @@ export function getPhaseByDayIndex(cycle: CycleContextData, dayIndex: number): s
     const start = cycle.cycle_start_date;
     const date = addDays(start, dayIndex);
 
-    if (date <= cycle.period_end_date) return 'menstrual';
-    if (date <= cycle.follicular_end_date) return 'follicular';
-    if (date <= cycle.ovulation_end_date) return 'ovulation';
-    if (date <= cycle.cycle_end_date) return 'luteal';
+    if (date <= cycle.period_end_date) return "menstrual";
 
-    // Prediction mode: loop through pattern
-    const pLen = cycle.period_length;
-    const fLen = getCycleDay(cycle.follicular_end_date, start) - pLen;
-    const oLen = getCycleDay(cycle.ovulation_end_date, start) - pLen - fLen;
-    const lLen = cycle.cycle_length - (pLen + fLen + oLen);
+    const ovulationDate = subDays(cycle.ovulation_end_date, 1);
+    const fertileStart = subDays(ovulationDate, 5);
+    const fertileEnd = cycle.ovulation_end_date; // ovulation + 1
+
+    if (date < fertileStart) return "follicular";
+    if (isEqual(date, ovulationDate)) return "ovulation";
+    if (date >= fertileStart && date <= fertileEnd) return "fertile";
+    if (date <= cycle.cycle_end_date) return "luteal";
+
+
+    const periodLength = cycle.period_length;
+
+    // predictions - when requested index is outside the range of the actual cycle data
+    const follicularLength = getCycleDay(fertileStart, start) - periodLength; // follicular length
+    const fertileWindow = 5;
+    const ovulationWindow = 1;
+    const afterOvulationFertileWindow = 1;
+    const lutealWindow = cycle.cycle_length - (periodLength + follicularLength + fertileWindow + ovulationWindow + afterOvulationFertileWindow);
 
     const pattern = [
-        ...Array(pLen).fill('menstrual'),
-        ...Array(fLen).fill('follicular'),
-        ...Array(oLen).fill('ovulation'),
-        ...Array(lLen).fill('luteal'),
+        ...Array(periodLength).fill("menstrual"),
+        ...Array(follicularLength).fill("follicular"),
+        ...Array(fertileWindow).fill("fertile"),
+        ...Array(ovulationWindow).fill("ovulation"),
+        ...Array(afterOvulationFertileWindow).fill("fertile"),
+        ...Array(lutealWindow).fill("luteal"),
     ];
 
-    return pattern[dayIndex % pattern.length] || 'luteal';
+    return pattern[dayIndex % pattern.length];
 }
 
 const styles = StyleSheet.create({

@@ -1,6 +1,6 @@
 import {createContext, ReactNode, useContext, useState} from "react";
 import {UserContextData, UserContextType} from "@/util/interfaces";
-import {User} from "@/util/models";
+import {UserModel} from "@/util/models";
 
 const UserContext = createContext<UserContextType>({
     user: null,

@@ -1,5 +1,6 @@
 import {CryptoDigestAlgorithm, digestStringAsync, randomUUID} from "expo-crypto";
 import CryptoJS from 'react-native-crypto-js';
+import {fromDateString, toDateString} from "@/util/dateHelpers";
 
 export const generateUUID = (): string => {
     return randomUUID();
@@ -36,3 +37,43 @@ export const decryptNumber = (data: string): number => {
     const decrypted = decryptString(data);
     return parseInt(decrypted, 10);
 };
+
+export const encryptDateToString = (date: Date): string => {
+    const dateString = toDateString(date);
+    return encryptString(dateString);
+}
+
+export const decryptFromStringToDate = (encryptedString: string): Date => {
+    const stringDate = decryptString(encryptedString);
+    return fromDateString(stringDate);
+}
+
+export const encryptData = async (data: object, password: string): Promise<string> => {
+    const json = JSON.stringify(data);
+    const hashedPassword = await digestStringAsync(
+        CryptoDigestAlgorithm.SHA256,
+        password
+    );
+    const encrypted = CryptoJS.AES.encrypt(json, hashedPassword).toString();
+
+    return encrypted;
+}
+
+export const decryptData = async (encryptedJson: string, password: string): Promise<object | null> => {
+    try {
+        const { ciphertext } = JSON.parse(encryptedJson);
+
+        const hashedPassword = await digestStringAsync(
+            CryptoDigestAlgorithm.SHA256,
+            password
+        );
+
+        const decrypted = CryptoJS.AES.decrypt(ciphertext, hashedPassword);
+        const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
+
+        return JSON.parse(decryptedText);
+    } catch (e) {
+        console.error('Failed to decrypt or parse data:', e);
+        return null;
+    }
+}

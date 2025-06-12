@@ -6,33 +6,30 @@ import {eachDayOfInterval} from "date-fns";
 import {toDateString} from "@/util/dateHelpers";
 
 export default function PeriodCalendar() {
-    const { cycle } = useCycle();
+    const { cycles } = useCycle();
 
-    if(!cycle)
+    if(!cycles)
         return (
             <View style={styles.container}>
                 <Text style={styles.text}>No cycle data found. Please log your period.</Text>
             </View>
         );
 
-    const start = cycle.cycle_start_date;
-    const end = cycle.period_end_date;
+    const markedDates = cycles.reduce((acc, cycle) => {
+        const range = eachDayOfInterval({
+            start: cycle.cycle_start_date,
+            end: cycle.period_end_date,
+        });
 
-    const dateRange = eachDayOfInterval({
-        start: cycle.cycle_start_date,
-        end: cycle.period_end_date,
-    });
-
-    const markedDates = dateRange.reduce((acc, date, index) => {
-        const formatted = toDateString(date);
-
-        acc[formatted] = {
-            color: '#F28B82',
-            textColor: 'white',
-            ...(index === 0 && { startingDay: true }),
-            ...(index === dateRange.length - 1 && { endingDay: true }),
-        };
-
+        range.forEach((date, index) => {
+            const formatted = toDateString(date);
+            acc[formatted] = {
+                color: '#F28B82',
+                textColor: 'white',
+                ...(index === 0 && { startingDay: true }),
+                ...(index === range.length - 1 && { endingDay: true }),
+            };
+        })
         return acc;
     }, {} as Record<string, any>);
 

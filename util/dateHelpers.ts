@@ -41,8 +41,10 @@ export function fromDateString(dateStr: string): Date {
 }
 
 export function toDateString(date: Date): string {
-    const year = date.getFullYear();
-    const month = `${date.getMonth() + 1}`.padStart(2, "0");
-    const day = `${date.getDate()}`.padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return format(date, 'yyyy-MM-dd');
+}
+
+export const refactorDateToDate = (date: Date): Date => {
+    const stringDate = toDateString(date);
+    return fromDateString(stringDate);
 }

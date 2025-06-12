@@ -1,23 +1,47 @@
 import {CycleContextData, CycleContextType} from "@/util/interfaces";
-import {createContext, ReactNode, useContext, useState} from "react";
+import {createContext, ReactNode, useContext, useMemo, useState} from "react";
+import {compareDesc, parseISO} from "date-fns";
 
 const CycleContext = createContext<CycleContextType>({
-    cycle: null,
-    setCycle: () => {},
+    cycles: [],
+    setCycles: () => {},
+    addCycle: () => {},
     updateCycle: () => {},
+    currentCycle: null
 });
 
 export const useCycle = () => useContext(CycleContext);
 
 export const CycleProvider = ({ children }: { children: ReactNode }) => {
-    const [cycle, setCycle] = useState<CycleContextData | null>(null);
+    const [cycles, setCycles] = useState<CycleContextData[]>([]);
 
-    const updateCycle = (partial: Partial<CycleContextData>) => {
-        setCycle((prev) => (prev ? { ...prev, ...partial } : prev));
+    const addCycle = (newCycle: CycleContextData) => {
+        setCycles((prev) => [newCycle, ...prev]);
     };
 
+    const updateCycle = (id: string, updates: Partial<CycleContextData>) => {
+        setCycles((prev) =>
+            prev.map((cycle) => (cycle.id === id ? { ...cycle, ...updates } : cycle))
+        );
+    };
+
+    const currentCycle = useMemo(() => {
+        const today = new Date();
+
+        // sorting cycles by most recent start date
+        const sortedCycles = [...cycles].sort(
+            (a, b) => b.cycle_start_date.getTime() - a.cycle_start_date.getTime()
+        );
+        // set most recent cycle as current cycle
+        return (
+            sortedCycles.find((cycle) =>
+                today >= cycle.cycle_start_date
+            ) ?? null
+        );
+    }, [cycles]);
+
     return (
-        <CycleContext.Provider value={{ cycle, setCycle, updateCycle }}>
+        <CycleContext.Provider value={{ cycles, setCycles, addCycle, updateCycle, currentCycle }}>
             {children}
         </CycleContext.Provider>
     );

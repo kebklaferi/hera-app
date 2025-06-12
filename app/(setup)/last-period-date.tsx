@@ -3,7 +3,7 @@ import {useState} from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import {useRouter} from "expo-router";
 import {updateUser} from "@/db/user-service";
-import {createUserCycle} from "@/db/cycle-service";
+import {createUserCycle, initUserCycle} from "@/db/cycle-service";
 import {useUser} from "@/context/UserContext";
 import {useSQLiteContext} from "expo-sqlite";
 import {useCycle} from "@/context/CycleContext";
@@ -12,8 +12,8 @@ const LastPeriodDate = () => {
     const [date, setDate] = useState<Date | null>(null);
     const [showPicker, setShowPicker] = useState(false);
     const db = useSQLiteContext();
-    const {user} = useUser();
-    const { setCycle } = useCycle();
+    const { user } = useUser();
+    const { addCycle } = useCycle();
     const router = useRouter();
 
     const handleConfirm = (event: any, selectedDate?: Date) => {
@@ -30,13 +30,13 @@ const LastPeriodDate = () => {
         }
         if (user) {
             await updateUser(db, user);
-            const createdCycle = await createUserCycle(db, user, date);
-            console.log('created cycle', createdCycle)
-            setCycle(createdCycle);
+            const createdCycle = await initUserCycle(db, user, date);
+            if (!createdCycle) return null;
+            console.log('Initialized first user cycle: ', createdCycle)
+            addCycle(createdCycle);
         }
         router.push({
-            pathname: "/(setup)/set-up-done",
-            params: {lastPeriod: date.toISOString()}
+            pathname: "/(setup)/set-up-done"
         });
     };
 

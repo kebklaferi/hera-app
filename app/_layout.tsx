@@ -8,6 +8,8 @@ import {UserProvider} from "@/context/UserContext";
 import {CycleProvider} from "@/context/CycleContext";
 import {Asset} from "expo-asset";
 import images from "@/constants/images";
+import * as Font from "expo-font";
+import { Ionicons } from "@expo/vector-icons";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -15,9 +17,10 @@ const RootNavigation = () => {
 
     useEffect(() => {
         const prepare = async () => {
+            await SplashScreen.hideAsync();
             const imageModules = Object.values(images);
             await Asset.loadAsync(imageModules);
-            await SplashScreen.hideAsync();
+            await Font.loadAsync(Ionicons.font);
         };
 
         prepare();

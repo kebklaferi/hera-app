@@ -1,4 +1,5 @@
-import {User} from "@/util/models";
+import {UserModel} from "@/util/models";
+import {Dispatch, SetStateAction} from "react";
 
 export interface LogData {
     notes: string,
@@ -31,10 +32,10 @@ export interface UserContextType {
 
 export interface UserContextData {
     id: string;
-    biometric_key?: boolean;
-    default_period_length?: number;
-    default_cycle_length?: number;
-    notes_enabled?: boolean;
+    biometric_key: boolean;
+    default_period_length: number;
+    default_cycle_length: number;
+    notes_enabled: boolean;
 }
 
 export interface ProfileData {
@@ -51,13 +52,17 @@ export interface CycleContextData {
     ovulation_end_date: Date;
     cycle_length: number;
     period_length: number;
-    created_at: string;
-    updated_at: string;
-    user_id: string;
 }
 
 export interface CycleContextType {
-    cycle: CycleContextData | null;
-    setCycle: (cycle: CycleContextData | null) => void;
-    updateCycle: (partial: Partial<CycleContextData>) => void;
+    cycles: CycleContextData[];
+    setCycles: Dispatch<SetStateAction<CycleContextData[]>>;
+    addCycle: (cycle: CycleContextData) => void;
+    updateCycle: (id: string, updates: Partial<CycleContextData>) => void;
+    currentCycle: CycleContextData | null;
+}
+
+export interface GeneratedCycle {
+    contextCycle: CycleContextData;
+    dbCycleValues: (string | number | null)[];
 }

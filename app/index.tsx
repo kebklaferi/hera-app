@@ -6,13 +6,13 @@ import {useEffect, useRef} from "react";
 import {useSQLiteContext} from "expo-sqlite";
 import {useCycle} from "@/context/CycleContext";
 import {getFirstUser} from "@/db/user-service";
-import {fetchLatestCycle} from "@/db/cycle-service";
+import {fetchLatestCycles} from "@/db/cycle-service";
 
 const App = () => {
     const router = useRouter();
     const db = useSQLiteContext();
     const {user, setUser} = useUser();
-    const {cycle, setCycle} = useCycle();
+    const {currentCycle, setCycles} = useCycle();
     const hasRedirected = useRef(false);
     const pathname = usePathname();
 
@@ -22,9 +22,9 @@ const App = () => {
                 //on warm resume
                 //cycle and user context should still be saved
                 console.log('user', user)
-                console.log('cycle', cycle)
+                console.log('cycle', currentCycle)
                 setTimeout(() => {
-                    if (user && cycle && pathname === '/(auth)/log-in') {
+                    if (user && currentCycle && pathname === '/(auth)/log-in') {
                         hasRedirected.current = true;
                         router.replace("/(auth)/log-in");
                         return;
@@ -34,12 +34,12 @@ const App = () => {
                 //on cold start if there is no user set in context
                 //on cold start when user is created
                 const userDb = await getFirstUser(db);
-
+                console.log("userdb", userDb)
                 if (userDb) {
                     setUser(userDb);
-                    const cycleDb = await fetchLatestCycle(db, userDb.id);
+                    const cycleDb = await fetchLatestCycles(db);
                     console.log('cycledb', cycleDb)
-                    setCycle(cycleDb);
+                    setCycles(cycleDb);
                     setTimeout(() => {
                         if (!hasRedirected.current && pathname !== "/(auth)/log-in") {
                             hasRedirected.current = true;
